@@ -3,29 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Course;
+use App\Models\SchoolClass;
 use Illuminate\Http\Request;
-use App\Traits\SchoolSession;
-use App\Interfaces\CourseInterface;
-use App\Http\Requests\CourseStoreRequest;
+use App\Interfaces\SchoolClassInterface;
 use App\Interfaces\SchoolSessionInterface;
-use App\Repositories\PromotionRepository;
+use App\Http\Requests\SchoolClassStoreRequest;
+use App\Traits\SchoolSession;
 
-class CourseController extends Controller
+class SchoolClassController extends Controller
 {
     use SchoolSession;
-    protected $schoolCourseRepository;
+    protected $schoolClassRepository;
     protected $schoolSessionRepository;
 
     /**
     * Create a new Controller instance
     * 
-    * @param CourseInterface $schoolCourseRepository
+    * @param SchoolClassInterface $schoolClassRepository
     * @return void
     */
-    public function __construct(SchoolSessionInterface $schoolSessionRepository, CourseInterface $schoolCourseRepository) {
+    public function __construct(SchoolSessionInterface $schoolSessionRepository, SchoolClassInterface $schoolClassRepository) {
+        $this->middleware(['can:view classes']);
+
         $this->schoolSessionRepository = $schoolSessionRepository;
-        $this->schoolCourseRepository = $schoolCourseRepository;
+        $this->schoolClassRepository = $schoolClassRepository;
     }
 
     /**
@@ -35,7 +36,11 @@ class CourseController extends Controller
      */
     public function index()
     {
-        //
+        $current_school_session_id = $this->getSchoolCurrentSession();
+
+        $data = $this->schoolClassRepository->getClassesAndSections($current_school_session_id);
+
+        return view('classes.index', $data);
     }
 
     /**
@@ -51,15 +56,15 @@ class CourseController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  CourseStoreRequest $request
+     * @param  SchoolClassStoreRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(CourseStoreRequest $request)
+    public function store(SchoolClassStoreRequest $request)
     {
         try {
-            $this->schoolCourseRepository->create($request->validated());
+            $this->schoolClassRepository->create($request->validated());
 
-            return back()->with('status', 'Course creation was successful!');
+            return back()->with('status', 'Class creation was successful!');
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());
         }
@@ -68,40 +73,32 @@ class CourseController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param  \App\Models\SchoolClass  $schoolClass
      * @return \Illuminate\Http\Response
      */
-    public function getStudentCourses($student_id) {
-        $current_school_session_id = $this->getSchoolCurrentSession();
-        $promotionRepository = new PromotionRepository();
-        $class_info = $promotionRepository->getPromotionInfoById($current_school_session_id, $student_id);
-        $courses = $this->schoolCourseRepository->getByClassId($class_info->class_id);
-
-        $data = [
-            'class_info'    => $class_info,
-            'courses'       => $courses,
-        ];
-        return view('courses.student', $data);
+    public function show(SchoolClass $schoolClass)
+    {
+        //
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  $course_id
+     * @param  $class_id
      * @return \Illuminate\Http\Response
      */
-    public function edit($course_id)
+    public function edit($class_id)
     {
         $current_school_session_id = $this->getSchoolCurrentSession();
 
-        $course = $this->schoolCourseRepository->findById($course_id);
+        $schoolClass = $this->schoolClassRepository->findById($class_id);
 
         $data = [
             'current_school_session_id' => $current_school_session_id,
-            'course'                    => $course,
-            'course_id'                 => $course_id,
+            'class_id'                  => $class_id,
+            'schoolClass'               => $schoolClass,
         ];
-
-        return view('courses.edit', $data);
+        return view('classes.edit', $data);
     }
 
     /**
@@ -113,9 +110,9 @@ class CourseController extends Controller
     public function update(Request $request)
     {
         try {
-            $this->schoolCourseRepository->update($request);
+            $this->schoolClassRepository->update($request);
 
-            return back()->with('status', 'Course update was successful!');
+            return back()->with('status', 'Class edit was successful!');
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());
         }
@@ -124,10 +121,10 @@ class CourseController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Course  $course
+     * @param  \App\Models\SchoolClass  $schoolClass
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Course $course)
+    public function destroy(SchoolClass $schoolClass)
     {
         //
     }
