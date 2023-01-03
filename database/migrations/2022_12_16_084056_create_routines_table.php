@@ -23,6 +23,7 @@ class CreateRoutinesTable extends Migration
             $table->unsignedInteger('course_id');
             $table->unsignedInteger('session_id');
             $table->timestamps();
+            
         });
     }
 
