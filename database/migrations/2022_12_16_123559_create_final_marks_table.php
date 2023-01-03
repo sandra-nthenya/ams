@@ -25,6 +25,7 @@ class CreateFinalMarksTable extends Migration
             $table->unsignedInteger('semester_id');
             $table->unsignedInteger('session_id');
             $table->timestamps();
+            
         });
     }
 
