@@ -24,6 +24,7 @@ class CreateAssignmentsTable extends Migration
             $table->string('assignment_name');
             $table->string('assignment_file_path');
             $table->timestamps();
+            
         });
     }
 
