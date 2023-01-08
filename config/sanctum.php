@@ -1,13 +1,1 @@
 
-
-    'guard' => ['web'],
-
-   
-
-    'expiration' => null,
-
-   
-
-   
-
-];
